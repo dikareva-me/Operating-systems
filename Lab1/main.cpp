@@ -3,10 +3,10 @@
 #include <filesystem>
 
 
-int main(){
+int main(int argc, char **argv){
     try {
-        Daemon::getInstance().init("config.txt");
-
+        std::string config_file = argc > 1 ? argv[1] : "config.txt"; 
+        Daemon::getInstance().init(config_file);
         Daemon::getInstance().run();
     } catch (std::exception const& e){
         syslog(LOG_ERR, "ERROR:: %s", e.what());
@@ -14,4 +14,3 @@ int main(){
     }
     return 0;
 }
-
