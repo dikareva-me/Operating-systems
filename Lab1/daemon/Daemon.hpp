@@ -25,6 +25,9 @@ public:
 
     void init(const std::string &config);
     void run();
+    static void signalManager(int signalNum);
+    void initSignals();
+    void terminate();
     
 private:
     Daemon(){}
@@ -33,6 +36,12 @@ private:
     void walkThroughFile(const string& path);
     string getAbsolutePath(const string &path) const;
     void loadConfig();
+
+    bool initTread() const;
+    bool initPid() const;
+    
+    void checkPid() const;
+    void savePid() const;
 
     void copyContent(const string& filePath) const;
     bool isLogFile(const string& file) const;

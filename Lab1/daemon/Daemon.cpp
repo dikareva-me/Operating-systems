@@ -1,6 +1,5 @@
 #include "Daemon.hpp"
 
-
 void Daemon::loadConfig() {
     syslog(LOG_INFO, "Parsing config file...");
     std::map<Parser::Grammar::ConfigParams, std::string> config;
@@ -32,6 +31,35 @@ string Daemon::getAbsolutePath(const string &path) const{
     return resultPath;
 }
 
+void Daemon::signalManager(int signalNum) {
+    syslog(LOG_INFO, "Handle signal %i", signalNum);
+    switch (signalNum) {
+        case SIGHUP:
+            syslog(LOG_INFO, "Updating config file");
+            getInstance().loadConfig();
+            break;
+        case SIGTERM:
+            syslog(LOG_INFO, "Terminate daemon");
+            getInstance().terminate();
+            break;
+        default:
+            syslog(LOG_INFO, "Signal %i is not handled", signalNum);
+    }
+}
+
+void Daemon::initSignals() {
+    syslog(LOG_INFO, "Signals initialization");
+
+    signal(SIGHUP, signalManager);
+    signal(SIGTERM, signalManager);
+}
+
+void Daemon::terminate() {
+    _isRunning = false;
+    unlink(_pidFilePath.c_str());
+    closelog();
+}
+
 void Daemon::init(const std::string &config) {
     openlog("daemonlab1", LOG_PID|LOG_NDELAY, LOG_USER);
     syslog(LOG_INFO, "Initializing daemon");
@@ -47,9 +75,13 @@ void Daemon::init(const std::string &config) {
     syslog(LOG_INFO, "Home directory - %s", buf);
 
     std::cout << "Home directory - " << buf <<'\n';
-    
-    loadConfig();
 
+    if(!initTread()){
+        return;
+    }
+    initSignals();
+    setConfig(config);
+    loadConfig();
  
     syslog(LOG_INFO, "Daemon is successfully initialized");
     _isRunning = true;
@@ -63,6 +95,71 @@ void Daemon::setConfig(const std::string &configFile) {
     syslog(LOG_INFO, "Trying read config file - %s", _configFile.c_str());
 }
 
+bool Daemon::initTread() const{
+    syslog(LOG_INFO, "Starting init thread...");
+    pid_t pid_t = fork();
+    if (pid_t == -1) {
+        throw std::runtime_error("Fork failed");
+    } 
+    else if (pid_t == 0) {
+        return initPid();
+    }
+    return false;
+}
+
+bool Daemon::initPid() const{
+    if (setsid() == -1) {
+        throw std::runtime_error("ERROR: Setsid return error");
+    }
+    pid_t pid = fork();
+    if (pid == -1) {
+        throw std::runtime_error("ERROR: Fork failed");
+    }
+    else if(pid != 0){
+        return false;
+    }
+
+    umask(0);
+    if (chdir("/") == -1) {
+        throw std::runtime_error("ERROR: Chdir return error: %d");
+    }
+    if (close(STDIN_FILENO) == -1 || close(STDOUT_FILENO) == -1 || close(STDERR_FILENO) == -1) {
+        throw std::runtime_error("Close return error: %d");
+    }
+
+    checkPid();
+    return true;
+}
+
+void Daemon::checkPid() const{
+    syslog(LOG_INFO, "Handle PID file...");
+    std::ifstream pidFile(_pidFilePath);
+    if (!pidFile.is_open()) {
+        throw std::runtime_error("ERROR: Can't open pid file");
+    }
+
+    pid_t newPidFile;
+    pidFile >> newPidFile;
+    pidFile.close();
+
+    std::string path = "/proc/" + std::to_string(newPidFile);
+    if (std::filesystem::exists(path)) {
+        kill(newPidFile, SIGTERM);
+    }
+
+    savePid();
+}
+
+void Daemon::savePid() const{
+    syslog(LOG_INFO, "Saving pid file...");
+    std::ofstream out(_pidFilePath);
+    if (!out.is_open()) {
+        throw std::runtime_error("ERROR: Can't open pid file");
+    }
+    out << getpid();
+    out.close();
+    syslog(LOG_NOTICE, "Thread init complete");
+}
 
 void Daemon::run(){
     while (_isRunning) {
