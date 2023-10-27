@@ -20,30 +20,45 @@ using std::string;
 class Daemon{
 public:
     Daemon(Daemon const&) = delete;
+    void operator=(Daemon const&)  = delete;
     
+    //get instance of daemon class
     static Daemon& getInstance();
 
-    void init(const std::string &config);
-    void run();
+    //handle incoming signals
     static void signalManager(int signalNum);
+    //set signals
     void initSignals();
+    //terminate daemon
     void terminate();
+    // initialize daemon instance with config file
+    void init(const std::string &config);
+    //start daemon work cycle
+    void run();
     
 private:
     Daemon(){}
     
+    //set absolute path to config file
     void setConfig(const std::string &configFile);
+    //iterating through files in the input directory
     void walkThroughFile(const string& path);
-    string getAbsolutePath(const string &path) const;
+    //get parsed configs from Parser
     void loadConfig();
+    //get absolute path from relative path
+    string getAbsolutePath(const string &path) const;
 
+    //initiating daemon in the system
     bool initTread() const;
     bool initPid() const;
     
+    //check pid file if daemon is already working
     void checkPid() const;
+    //write our process's pid to pid file
     void savePid() const;
-
+    //copy contents of a log file and prepare it for writing in total.log
     void copyContent(const string& filePath) const;
+    //check if file is *.log
     bool isLogFile(const string& file) const;
     
     const string targetFileFormat = "log";

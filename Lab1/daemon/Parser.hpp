@@ -19,11 +19,16 @@ public:
             DEFAULT,
         };
 
+
+        //how config file is written: names of params
         Grammar();
+        //number of config params
         int getGrammarCount();
+        //the value of parsed param
         ConfigParams getGrammarValue(const std::string& value);
 
     private:
+        //the name and the value of config params
         const std::map<std::string, ConfigParams> _grammar;
 
         Grammar(Grammar const&) = delete;
@@ -31,9 +36,12 @@ public:
     };
 
     Parser() = default;
+    //get instance of a Parser class
     static Parser& getInstance();
 
+    //parsing info from config file
     void parseConfig(std::string &configFileName);
+    //get parsed config params
     std::map<Parser::Grammar::ConfigParams, std::string> getParams();
 
 private:
