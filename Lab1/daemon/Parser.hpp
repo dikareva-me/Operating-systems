@@ -34,6 +34,7 @@ public:
     static Parser& getInstance();
 
     void parseConfig(std::string &configFileName);
+    std::map<Parser::Grammar::ConfigParams, std::string> getParams();
 
 private:
     static Parser _instance;

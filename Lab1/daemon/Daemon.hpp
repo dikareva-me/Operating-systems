@@ -32,6 +32,7 @@ private:
     void setConfig(const std::string &configFile);
     void walkThroughFile(const string& path);
     string getAbsolutePath(const string &path) const;
+    void loadConfig();
 
     void copyContent(const string& filePath) const;
     bool isLogFile(const string& file) const;

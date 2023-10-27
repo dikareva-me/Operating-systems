@@ -33,6 +33,9 @@ void Parser::parseConfig(std::string &configPath) {
     syslog(LOG_INFO, "DONE");
 }
 
+std::map<Parser::Grammar::ConfigParams, std::string> Parser::getParams() {
+    return _config;
+}
 
 Parser::Grammar::ConfigParams Parser::Grammar::getGrammarValue(const std::string& value) {
     Parser::Grammar::ConfigParams result = _grammar.at(value);

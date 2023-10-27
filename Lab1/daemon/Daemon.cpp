@@ -1,6 +1,18 @@
 #include "Daemon.hpp"
 
 
+void Daemon::loadConfig() {
+    syslog(LOG_INFO, "Parsing config file...");
+    std::map<Parser::Grammar::ConfigParams, std::string> config;
+    Parser& parser = Parser::getInstance();
+    parser.parseConfig(_configFile);
+    config = parser.getParams();
+    _sleepTime = std::stoi(config[Parser::Grammar::ConfigParams::TIME_DELAY]);
+    _inputDir = getAbsolutePath(config[Parser::Grammar::ConfigParams::DIRECTORY1]);
+    _outputDir = getAbsolutePath(config[Parser::Grammar::ConfigParams::DIRECTORY2]);
+    totalLogPath = _outputDir + "/total.log";
+}
+
 Daemon& Daemon::getInstance(){
         static Daemon _instance;
         return _instance;
@@ -35,6 +47,8 @@ void Daemon::init(const std::string &config) {
     syslog(LOG_INFO, "Home directory - %s", buf);
 
     std::cout << "Home directory - " << buf <<'\n';
+    
+    loadConfig();
 
  
     syslog(LOG_INFO, "Daemon is successfully initialized");
