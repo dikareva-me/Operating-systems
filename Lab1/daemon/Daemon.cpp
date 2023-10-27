@@ -63,7 +63,6 @@ void Daemon::terminate() {
 void Daemon::init(const std::string &config) {
     openlog("daemonlab1", LOG_PID|LOG_NDELAY, LOG_USER);
     syslog(LOG_INFO, "Initializing daemon");
-    std::cout << "Initializing daemon\n";
 
     char buf[FILENAME_MAX];
     if (!getcwd(buf, FILENAME_MAX)) {
@@ -73,8 +72,6 @@ void Daemon::init(const std::string &config) {
     }
     _homeDir = buf;
     syslog(LOG_INFO, "Home directory - %s", buf);
-
-    std::cout << "Home directory - " << buf <<'\n';
 
     if(!initTread()){
         return;
