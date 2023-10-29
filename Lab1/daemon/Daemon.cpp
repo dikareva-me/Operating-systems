@@ -22,12 +22,11 @@ string Daemon::getAbsolutePath(const string &path) const{
         return path;
     }
     string output = _homeDir + "/" + path;
-    char *result = realpath(output.c_str(), nullptr);
+    std::shared_ptr<char> result(realpath(output.c_str(), nullptr));
     if (result == nullptr) {
         throw std::runtime_error("ERROR: Couldn't find path:" + path);
     }
-    string resultPath(result);
-    free(result);
+    string resultPath(result.get());
     return resultPath;
 }
 
