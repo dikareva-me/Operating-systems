@@ -68,12 +68,11 @@ void Daemon::init(const std::string &config) {
     if (!getcwd(buf, FILENAME_MAX)) {
         throw std::runtime_error("ERROR: Failed in getcwd");
 
-    std::cout << "ERROR: Failed in getcwd\n";
     }
     _homeDir = buf;
     syslog(LOG_INFO, "Home directory - %s", buf);
 
-    if(!initTread()){
+    if(!forkProcess()){
         return;
     }
     initSignals();
@@ -92,7 +91,7 @@ void Daemon::setConfig(const std::string &configFile) {
     syslog(LOG_INFO, "Trying read config file - %s", _configFile.c_str());
 }
 
-bool Daemon::initTread() const{
+bool Daemon::forkProcess() const{
     syslog(LOG_INFO, "Starting init thread...");
     pid_t pid_t = fork();
     if (pid_t == -1) {

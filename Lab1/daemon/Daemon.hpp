@@ -49,7 +49,7 @@ private:
     string getAbsolutePath(const string &path) const;
 
     //initiating daemon in the system
-    bool initTread() const;
+    bool forkProcess() const;
     bool initPid() const;
     
     //check pid file if daemon is already working
