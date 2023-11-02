@@ -67,6 +67,7 @@ void Daemon::init(const std::string &config) {
     if (!getcwd(buf, FILENAME_MAX)) {
         throw std::runtime_error("ERROR: Failed in getcwd");
 
+    std::cout << "ERROR: Failed in getcwd\n";
     }
     _homeDir = buf;
     syslog(LOG_INFO, "Home directory - %s", buf);
@@ -121,28 +122,23 @@ bool Daemon::initPid() const{
     if (close(STDIN_FILENO) == -1 || close(STDOUT_FILENO) == -1 || close(STDERR_FILENO) == -1) {
         throw std::runtime_error("Close return error: %d");
     }
-
+    
     checkPid();
+    savePid();
     return true;
 }
 
 void Daemon::checkPid() const{
     syslog(LOG_INFO, "Handle PID file...");
     std::ifstream pidFile(_pidFilePath);
-    if (!pidFile.is_open()) {
-        throw std::runtime_error("ERROR: Can't open pid file");
+    if (pidFile.is_open()) {
+        int pid = 0;
+        if (pidFile >> pid && kill(pid, 0) == 0){
+            syslog(LOG_INFO, "Killing another daemon instance");
+            kill(pid, SIGTERM);
+        }
+        pidFile.close();
     }
-
-    pid_t newPidFile;
-    pidFile >> newPidFile;
-    pidFile.close();
-
-    std::string path = "/proc/" + std::to_string(newPidFile);
-    if (std::filesystem::exists(path)) {
-        kill(newPidFile, SIGTERM);
-    }
-
-    savePid();
 }
 
 void Daemon::savePid() const{
@@ -153,7 +149,7 @@ void Daemon::savePid() const{
     }
     out << getpid();
     out.close();
-    syslog(LOG_NOTICE, "Thread init complete");
+    syslog(LOG_INFO, "Pid file saved.");
 }
 
 void Daemon::run(){
