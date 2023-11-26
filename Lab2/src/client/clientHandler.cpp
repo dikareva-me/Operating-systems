@@ -85,7 +85,7 @@ bool Client::getMessages(ConnInfo& info){
         int s = sem_timedwait(info._sem_client, &time);
         if (s == -1)
         {
-            syslog(LOG_ERR, "Read timeout");
+            syslog(LOG_ERR, "Semaphor timed wait failed: %s", strerror(errno));
             _isRunning = false;
             return false;
         }
@@ -93,10 +93,8 @@ bool Client::getMessages(ConnInfo& info){
     _inputMsg.getFromConn(info.conn);
 
     IConn::Message inMsg;
-    if (Client::getInstance()._inputMsg.pop(&inMsg)){
-
+    if (Client::getInstance()._inputMsg.pop(&inMsg))
         std::cout << inMsg.msg << std::endl;
-    }
 
     return true;
 }
@@ -127,7 +125,7 @@ void Client::processConn(){
 void Client::run() {
     std::thread connectionThread(&Client::processConn, this);
     std::cout << "CLIENT CHAT. Send messages."  << std::endl;
-        while(isRunning()){
+    while(isRunning()){
         sendFromTerminal();
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
@@ -138,9 +136,9 @@ void Client::handleSignal(int signum, siginfo_t *info, void *ptr) {
     switch (signum) {
         case SIGUSR1:
         {
-        syslog(LOG_INFO, "[INFO] Host are ready");
-        Client::getInstance()._isRunning = true;
-        break;
+            syslog(LOG_INFO, "[INFO] Host are ready");
+            Client::getInstance()._isRunning = true;
+            break;
         }
         case SIGTERM:
         case SIGINT:

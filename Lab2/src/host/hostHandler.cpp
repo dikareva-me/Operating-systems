@@ -85,9 +85,8 @@ bool Host::getMessages(ConnInfo& info){
         clock_gettime(CLOCK_REALTIME, &time);
         time.tv_sec += 5;
 
-       int s = sem_timedwait(info._sem_host, &time);
-        if (s == -1)
-        {
+        int s = sem_timedwait(info._sem_host, &time);
+        if (s == -1){
             syslog(LOG_ERR, "Semaphor timed wait failed: %s", strerror(errno));
             _isRunning = false;
             return false;
